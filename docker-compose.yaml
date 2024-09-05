@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   frontend:
     build:
@@ -13,6 +15,13 @@ services:
       - "9005:9005"
     networks:
       - lideratech-net
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   backend:
     build:
@@ -20,7 +29,7 @@ services:
       dockerfile: Dockerfile
     container_name: backend-lideratech
     environment:
-      - CORS_ADDRESS
+      - CORS_ADDRESS=*
       - DB_DRIVER=postgres
       - DB_HOST=database
       - DB_PORT=5432
@@ -34,6 +43,11 @@ services:
       - lideratech-net
     depends_on:
       - database
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   database:
     image: postgres:latest
@@ -49,6 +63,11 @@ services:
       - "5432:5432"
     networks:
       - lideratech-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   postgres_data:
